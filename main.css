@@ -1,0 +1,93 @@
+body {
+    font-family: Montserrat;
+    user-select: none;
+}
+h1 {
+    text-align: center;
+    letter-spacing: 0.3ch;
+    text-transform: uppercase;
+    font-weight: 400;
+}
+.fa-chalkboard {
+    margin-right: 12px;
+}
+.cardme {
+    border-radius: 15px;
+    -webkit-box-shadow: 9px 10px 31px 0px rgba(161,161,161,1);
+    -moz-box-shadow: 9px 10px 31px 0px rgba(161,161,161,1);
+    box-shadow: 9px 10px 31px 0px rgba(161,161,161,1);
+    margin: 15px, 15px, 5px, 0;
+    padding: 15px;
+}
+.cardme .img {
+    height: 100px;
+    width: 100px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#yourcode {
+    text-align: center;
+    font-size: 35px;
+    letter-spacing: 0.2ch;
+    margin-top: -20px;
+    font-weight: 600;
+    
+}
+
+#codeis {
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.macro {
+    display: flex;
+    border: 0.2px solid rgb(204, 204, 204);
+    margin: 0;
+}
+
+.macro img {
+    height: 100px;
+    width: 100px;
+    object-fit: cover;
+}
+
+.macro .macro-content {
+    margin-left: 15px;
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+.macro h3 {
+    font-size: 1.8rem;
+    margin: 0;
+    text-overflow: ellipsis;
+    width: 60vw;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.macro p {
+    margin: 0;
+
+}
+
+.macro .run {
+    color: rgb(185, 124, 11);
+    cursor: pointer;
+}
+
+.macro .edit {
+    color: rgb(77, 119, 145);
+    cursor: pointer;
+}
+
+.macro .delete {
+    color: red;
+    cursor: pointer;
+}
+
+
+.macros .macro:nth-child(n+2) {
+    border-top: 0px
+}

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Macros</title>
+    <link rel="stylesheet" href="materialize.min.css">
+    <script src="materialize.min.js"></script>
+    <link rel="stylesheet" href="./main.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.1.1/css/all.css" integrity="sha384-O8whS3fhG2OnA5Kas0Y9l3cfpmYjapjI0E4theH4iuMD+pLhbf6JI0jIMfYcK3yZ" crossorigin="anonymous">
+    <script defer src="https://use.fontawesome.com/releases/v5.1.1/js/all.js" integrity="sha384-BtvRZcyfv4r0x/phJt9Y9HhnN5ur1Z+kZbKVgzVBAlQZX4jvAuImlIz+bG7TS00a" crossorigin="anonymous"></script>
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:100,100italic,200,200italic,300,300italic,regular,italic,500,500italic,600,600italic,700,700italic,800,800italic,900,900italic" rel="stylesheet" />
+</head>
+<body style="width: 100vw; overflow:hidden">
+    <h1><i class="fas fa-chalkboard    "></i>StromDonk</h1>
+    <div class="cardme">
+        <div style="display: flex; justify-content: space-between;">
+            <div>
+                <h2>Good day!</h2>
+                <p style="margin-top: -15px;">Let's make some macros!</p>
+            </div>
+            <div style="margin-top: auto; margin-bottom: auto; margin-right: 5px;">
+                <a onclick="handleCreate()" class="btn-floating btn-med waves-effect waves-light grey" style="font-size: 2rem; text-align: center;">+</a>
+            </div>
+        </div>
+        <div class="macros" id="macros">
+            
+        </div>
+        
+        
+    </div>
+    <script id="macrotemplate" type="x-tmpl-mustache">
+        <div class="macro">
+            <img src="{{ img }}" />
+            <div class="macro-content">
+                <h3>{{ name }}</h3>
+                <p><a class="run" onclick="handleRun('{{ cmd }}')">Run</a> • <a class="edit" onclick="handleEdit('{{ cmd }}')">Edit</a> • <a class="delete" onclick="handleDelete('{{ cmd }}')">Delete</a></p>
+            </div>
+        </div>
+    </script>
+    <script>
+
+        const Mustache = require('mustache')
+        const { ipcRenderer } = require('electron')
+        
+        function renderMacro(macro) {
+            if (!macro.img) {
+                macro.img = `file://${__dirname}/pix-not-available.png`;
+            }
+            var template = document.getElementById('macrotemplate').innerHTML;
+            var rendered = Mustache.render(template, macro);
+            document.getElementById('macros').innerHTML = document.getElementById('macros').innerHTML + rendered;
+        }
+
+        async function renderAllMacros() {
+            ipcRenderer.send('macros');
+            await ipcRenderer.on('macro-success', (event, macros) => {
+                console.log(macros)
+                for (let [key, value] of Object.entries(macros)) {
+                    renderMacro(value)
+                }
+            })
+        }        
+
+        function handleCreate() {
+            ipcRenderer.send('open-creator');
+        }
+
+        function handleRun(run) {
+            ipcRenderer.send('run', run);
+        }
+
+        function handleEdit(edit) {
+            console.log(edit);
+        }
+
+        function handleDelete(del) {
+            ipcRenderer.send('delete-macro', del);
+        } 
+
+        ipcRenderer.on('toast', (event, arg) => {
+            M.toast({html: arg});
+        })
+
+        renderAllMacros()
+
+
+
+    </script>
+</body>
+</html>

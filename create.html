@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creator</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="materialize.min.js"></script>
+    <link rel="stylesheet" href="materialize.min.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.1.1/css/all.css" integrity="sha384-O8whS3fhG2OnA5Kas0Y9l3cfpmYjapjI0E4theH4iuMD+pLhbf6JI0jIMfYcK3yZ" crossorigin="anonymous">
+    <script defer src="https://use.fontawesome.com/releases/v5.1.1/js/all.js" integrity="sha384-BtvRZcyfv4r0x/phJt9Y9HhnN5ur1Z+kZbKVgzVBAlQZX4jvAuImlIz+bG7TS00a" crossorigin="anonymous"></script>
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:100,100italic,200,200italic,300,300italic,regular,italic,500,500italic,600,600italic,700,700italic,800,800italic,900,900italic" rel="stylesheet" />
+    <script src="https://www.gstatic.com/firebasejs/7.13.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.13.1/firebase-storage.js"></script>
+
+    <style>
+        .mycard {
+            margin-left: 30px;
+            margin-right: 30px;
+            padding: 10px;
+            
+        }
+    </style>
+</head>
+<body>
+    <div class="card mycard">
+        <div style="display: flex; justify-content: space-between; align-content: center;">
+            <h2 style="margin-bottom: 30px;">Let's connect a macro!</h2>
+            <a id="save" onclick="submit()" class="waves-effect waves-light btn" style="margin-top: 13px; margin-bottom: auto"><i class="material-icons left">add</i>Save</a>
+        </div>
+        <div style="display: flex; justify-content: space-between;">
+            <div style="width:53%">
+                <div class="input-field">
+                    <input onkeyup="handleName()" placeholder="Name your macro" id="name" type="text" class="validate">
+                    <label for="name">Name</label>
+                </div>
+                <div class="input-field">
+                    <input onclick="handlePathSelect()" placeholder="Click to select path" id="path" type="text" class="validate">
+                    <label for="path">Path</label>
+                </div>
+            </div>
+            <div style="margin-right: 30px;">
+                <img onclick="handleImageSelect()" id="img" src="pix-not-available.png" style="height: 150px; width: 150px; object-fit: cover;">
+            </div>
+        </div>
+    </div>
+    <script>
+        const uid = require('uuid-random');
+        const uuid = uid();
+        const {remote} = require('electron');
+        const fs = require('fs');
+        var randomstring = require("randomstring");
+        const { ipcRenderer } = require('electron');
+        const pth = require('path'); //have an essential path variable, so this one is named pth
+        dialog = remote.dialog;
+        WIN = remote.getCurrentWindow();
+        const macro = {
+            name: null,
+            path: null, 
+            img: null,
+            cmd: null
+        }
+        const firebaseConfig = {
+            apiKey: "AIzaSyDUmiAyRh2OG6SkbwRExD15iPcJR3vT0Z0",
+            authDomain: "sheepstudios-c18d6.firebaseapp.com",
+            databaseURL: "https://sheepstudios-c18d6.firebaseio.com",
+            projectId: "sheepstudios-c18d6",
+            storageBucket: "sheepstudios-c18d6.appspot.com",
+            messagingSenderId: "217885786565",
+            appId: "1:217885786565:web:dfcd7a01d40acc3d78cbac",
+            measurementId: "G-56RVMG8X3N"
+        };
+        firebase.initializeApp(firebaseConfig);
+        let storageRef = null;
+
+        function handlePathSelect() {
+            const options = {
+                title: "Select macro",
+                buttonLabel: "Select",
+                filters: [{name: "Scripts", extensions: ['exe', 'ahk', 'vbs', 'bat']}],
+                properties: ['openFile'],
+            }
+            let filePath = dialog.showOpenDialog(WIN, options).then((data) => {
+                setScriptPath(data.filePaths[0]);
+            })
+        }
+
+        function setScriptPath(path) {
+            document.getElementById('path').value = path;
+            macro.path = path;
+        }
+        
+        function handleName() {
+            macro.name = document.getElementById('name').value;
+        }
+
+        function handleImageSelect() {
+            
+            const options = {
+                title: "Pick an image",
+                buttonLabel: "Upload for hosting on Firebase",
+                filters: [{name: "Images", extensions: ['png', 'gif', 'jpg', 'jpeg']}],
+                properties: ['openFile'],
+            }
+            let filePath = dialog.showOpenDialog(WIN, options).then((data) => {
+                const path = data.filePaths[0];
+                document.getElementById('img').src = path;
+                prepareUpload(path);
+            })
+        }
+        
+        function prepareUpload(pt) {
+            //saves path of img for later upload to firebase, also sets firebase reference with proper extension (.png)
+            path = pt;
+            console.log(path, "yeehaw")
+            storageRef = firebase.storage().ref('/' + uuid + pth.extname(path));
+        }
+        function submit() {
+            console.log(path)
+            if (macro.name && macro.path) {
+                document.getElementById('save').innerHTML = `
+                <div class="preloader-wrapper small active">
+                    <div class="spinner-layer spinner-blue-only">
+                    <div class="circle-clipper left">
+                        <div class="circle"></div>
+                    </div><div class="gap-patch">
+                        <div class="circle"></div>
+                    </div><div class="circle-clipper right">
+                        <div class="circle"></div>
+                    </div>
+                    </div>
+                </div>`; //creates loading animation
+                let buf = fs.readFileSync(path); //makes binary buffer
+                let abuf = toArrayBuffer(buf); //makes array buffer
+                let file = new Blob([abuf]) //makes blob
+                storageRef.put(file).then((snapshot) => {
+                    snapshot.ref.getDownloadURL().then((downloadURL) => {
+                        macro.img = downloadURL;
+                        macro.cmd = randomstring.generate(10);
+                        ipcRenderer.send('create-macro', macro);
+                        WIN.close();
+                    })
+                })
+                
+            }
+            
+        }
+
+
+        function toArrayBuffer(buffer) {
+            var ab = new ArrayBuffer(buffer.length);
+            var view = new Uint8Array(ab);
+            for (var i = 0; i < buffer.length; ++i) {
+                view[i] = buffer[i];
+            }
+            return ab;
+        }
+
+    </script>
+</body>
+</html>
