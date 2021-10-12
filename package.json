@@ -9,7 +9,7 @@
   "author": "George Parks",
   "license": "ISC",
   "dependencies": {
-    "electron": "^9.4.0",
+    "electron": "^11.5.0",
     "electron-json-storage": "^4.1.8",
     "menubar": "^8.0.1",
     "mustache": "^4.0.1",
